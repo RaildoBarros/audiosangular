@@ -6,6 +6,7 @@
 <script src="https://cdn.jsdelivr.net/npm/angular-utils-pagination@0.11.1/dirPagination.js"></script>
 
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-i18n/1.7.5/angular-locale_pt-br.min.js"></script>
@@ -19,13 +20,21 @@
         font-size: 12px;
     }
 
-    table thead tr th {
-        font-size: 12px;
-        font-weight: bold;
+    .pesquisar {
+        padding-top: 10px;
+        margin-bottom: 2px
     }
 
-    table tbody tr td {
-        font-size: 12px;
+    li {
+        height: 120px;
+    }
+
+    .date {
+        float: right;
+    }
+
+    .downloads div {
+        display: inline;
     }
 
 </style>
@@ -34,35 +43,38 @@
 
 <div ng-app="myApp" ng-controller="customersCtrl">
 
-    <div class="md-form mt-0" style="margin-bottom: 2px">
+    <div class="md-form mt-0 w3-card pesquisar">
         <input ng-model="procurar" class="form-control" type="text" placeholder="Pesquisar..." aria-label="Pesquisar">
     </div>
 
-    <table class="table">
-        <thead>
-        <tr style="text-align: center">
-            <th scope="col">Nº</th>
-            <th scope="col">Tema</th>
-            <th scope="col">Data</th>
-            <th scope="col">Tamanho</th>
-            <th scope="col">Download</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr dir-paginate="a in audios | orderBy : '-date' | filter:procurar | itemsPerPage: pageSize" current-page="currentPage">
-            <td>{{ ($index + 1) + (currentPage - 1) * pageSize }}</td>
-            <td>{{ a.tema }}</td>
-            <td>{{ a.date | date: 'fullDate' }}</td>
-            <td>{{ (a.fileSize/1024)/1024 | number: 2 }} MB</td>
-            <td style="text-align: center"><a ng-href="{{ a.webContentLink }}" target="_blank"><i class="fa fa-download"></i></a></td>
-        </tr>
-        </tbody>
-    </table>
+    <ul class="w3-ul w3-card">
+        <li dir-paginate="a in audios | filter:procurar | itemsPerPage: pageSize" current-page="currentPage">
+            <div>
+                <div>
+                    <h6><b>{{ a.tema | uppercase}}</b></h6>
+                    <h6><i><b>Preletor: </b>Pr. Fulano da Silva</i></h6>
+
+                    <div class="downloads">
+                        <div>
+                            <a ng-href="{{ a.webContentLink }}" target="_blank"><i class="fa fa-download"></i> Culto Completo</a>
+                            {{ (a.fileSize/1024)/1024 | number: 2 }} MB
+                        </div>
+                        <div ng-if="a.mensagem">
+                            | <a ng-href="{{ a.mensagem.webContentLink }}" target="_blank"><i class="fa fa-download"></i> Mensagem</a>
+                            {{ (a.mensagem.fileSize/1024)/1024 | number: 2 }} MB
+                        </div>
+                    </div>
+                    <p class="date">
+                        <i class="fa fa-calendar"></i> {{ a.date | date: 'fullDate' }}
+                    </p>
+                </div>
+            </div>
+        </li>
+    </ul>
 
     <div style="text-align: center">
         <dir-pagination-controls boundary-links="true" direction-links="true"></dir-pagination-controls>
     </div>
-
 </div>
 
 <script>
@@ -71,7 +83,8 @@
     app.controller('customersCtrl', function($scope, $http) {
         $scope.currentPage = 1;
         $scope.pageSize = 10;
-        $http.get("https://api.myjson.com/bins/12qba2").then(function (response) {
+        // $http.get("https://api.myjson.com/bins/12qba2").then(function (response) {
+        $http.get("audios.json").then(function (response) {
             $scope.audios = response.data;
         });
     });
