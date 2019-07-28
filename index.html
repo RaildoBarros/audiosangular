@@ -1,15 +1,18 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <meta charset="UTF-8">
-
 <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/angular-utils-pagination@0.11.1/dirPagination.js"></script>
 
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/angular-i18n/1.7.5/angular-locale_pt-br.min.js"></script>
+<script src="https://momentjs.com/downloads/moment.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/locale/pt-br.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/angular-moment/1.3.0/angular-moment.min.js"></script>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.6.0/css/mdb.min.css">
@@ -20,9 +23,20 @@
         font-size: 12px;
     }
 
-    .pesquisar {
-        padding-top: 10px;
-        margin-bottom: 2px
+    #pesquisa div {
+        display: inline;
+    }
+
+    #pesquisa div input {
+        height: 35px;
+    }
+
+    .pesquisar-nome {
+        width: 50%;
+    }
+
+    .pesquisar-data {
+        width: 30%;
     }
 
     li {
@@ -37,59 +51,92 @@
         display: inline;
     }
 
+    .downloads a {
+        color: black;
+        font-weight: bold;
+    }
+
+    #paginate {
+        text-align: center;
+    }
+
+    #main {
+        margin: auto 20% auto 20%;
+    }
+
+    #title div {
+        display: inline;
+    }
 </style>
 
 <body>
 
-<div ng-app="myApp" ng-controller="customersCtrl">
+<div id="main" ng-app="myApp" ng-controller="customersCtrl">
 
-    <div class="md-form mt-0 w3-card pesquisar">
-        <input ng-model="procurar" class="form-control" type="text" placeholder="Pesquisar..." aria-label="Pesquisar">
+    <div id="pesquisa" class="md-form mt-0">
+        <div class="">
+            <input class="pesquisar-nome w3-card" ng-model="procurar" type="text" placeholder="Pesquisar..." aria-label="Pesquisar">
+        </div>
+        <div>
+            <input class="w3-card date pesquisar-data" type="date" name="data" ng-model="data">
+        </div>
+
     </div>
 
     <ul class="w3-ul w3-card">
-        <li dir-paginate="a in audios | filter:procurar | itemsPerPage: pageSize" current-page="currentPage">
+        <li dir-paginate="a in audios | orderBy : '-date' | filter:procurar | filter: dataFormatada | itemsPerPage: pageSize" current-page="currentPage">
             <div>
                 <div>
-                    <h6><b>{{ a.tema | uppercase}}</b></h6>
-                    <h6><i><b>Preletor: </b>Pr. Fulano da Silva</i></h6>
+                    <h6><b> {{ a.tema | uppercase}}</b></h6>
+                    <h6><i><b>Preletor: </b>{{ a.preletor }}</i></h6>
 
                     <div class="downloads">
                         <div>
                             <a ng-href="{{ a.webContentLink }}" target="_blank"><i class="fa fa-download"></i> Culto Completo</a>
-                            {{ (a.fileSize/1024)/1024 | number: 2 }} MB
+                            <i>({{ (a.fileSize/1024)/1024 | number: 2 }} MB)</i>
                         </div>
                         <div ng-if="a.mensagem">
                             | <a ng-href="{{ a.mensagem.webContentLink }}" target="_blank"><i class="fa fa-download"></i> Mensagem</a>
-                            {{ (a.mensagem.fileSize/1024)/1024 | number: 2 }} MB
+                            <i>({{ (a.mensagem.fileSize/1024)/1024 | number: 2 }} MB)</i>
                         </div>
                     </div>
                     <p class="date">
-                        <i class="fa fa-calendar"></i> {{ a.date | date: 'fullDate' }}
+                        <i class="fa fa-calendar"></i> {{ a.date | date: 'fullDate' }} | {{ a.date | amTimeAgo }}
                     </p>
                 </div>
             </div>
         </li>
     </ul>
 
-    <div style="text-align: center">
+    <div id="paginate">
         <dir-pagination-controls boundary-links="true" direction-links="true"></dir-pagination-controls>
     </div>
 </div>
 
 <script>
-    var app = angular.module('myApp', ['angularUtils.directives.dirPagination']);
+    var app = angular.module('myApp', ['angularUtils.directives.dirPagination','angularMoment']);
 
-    app.controller('customersCtrl', function($scope, $http) {
+    app.controller('customersCtrl', function($scope, $http, $filter) {
+        $scope.dataAtual = new Date();
         $scope.currentPage = 1;
         $scope.pageSize = 10;
         // $http.get("https://api.myjson.com/bins/12qba2").then(function (response) {
         $http.get("audios.json").then(function (response) {
             $scope.audios = response.data;
         });
+        $scope.$watch("data",function() {
+            $scope.dataFormatada = $filter('date')($scope.data, 'dd.MM.yy');
+
+        });
+
+        $scope.$watch("dataFormatada",function() {
+            if($scope.dataFormatada == null){
+                $scope.dataFormatada = "";
+            }
+        });
+
     });
 
 </script>
-
 </body>
 </html>
